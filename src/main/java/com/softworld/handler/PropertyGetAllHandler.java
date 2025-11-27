@@ -19,9 +19,22 @@ import java.util.Map;
 public class PropertyGetAllHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Gson gson = new Gson();
+    private static final String EXPECTED_PATH = "/properties";
+    private static final String EXPECTED_METHOD = "GET";
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
+
+        if (!EXPECTED_METHOD.equals(request.getHttpMethod())) {
+            return buildErrorResponse(405, "Method Not Allowed", 
+                "Only GET method is supported");
+        }
+
+        String path = request.getPath();
+        if (path != null && !path.equals(EXPECTED_PATH) && !path.endsWith(EXPECTED_PATH)) {
+            return buildErrorResponse(404, "Not Found", 
+                "Path not found: " + path);
+        }
 
         List<Property> propertyList = new ArrayList<>();
 
@@ -51,16 +64,22 @@ public class PropertyGetAllHandler implements RequestHandler<APIGatewayProxyRequ
 
         } catch (Exception e) {
             context.getLogger().log("Failed connection to database: " + e.getMessage());
-
-            Map<String, String> responseError = new HashMap<>();
-            responseError.put("error", "Internal Server Error");
-            responseError.put("message", e.getMessage());
-
-            return new APIGatewayProxyResponseEvent()
-                    .withStatusCode(500)
-                    .withHeaders(Map.of("Content-Type", "application/json"))
-                    .withBody(gson.toJson(responseError));
+            return buildErrorResponse(500, "Internal Server Error", e.getMessage());
         }
 
+    }
+
+    private APIGatewayProxyResponseEvent buildErrorResponse(int statusCode, String error, String message) {
+        Map<String, String> responseError = new HashMap<>();
+        responseError.put("error", error);
+        responseError.put("message", message);
+
+        return new APIGatewayProxyResponseEvent()
+                .withStatusCode(statusCode)
+                .withHeaders(Map.of(
+                        "Content-Type", "application/json",
+                        "X-Custom-Header", "PropertyGetAllHandler"
+                ))
+                .withBody(gson.toJson(responseError));
     }
 }
