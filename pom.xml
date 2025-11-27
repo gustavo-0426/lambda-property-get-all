@@ -4,9 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.softworld.cloud</groupId>
-	<artifactId>property-get-all</artifactId>
+	<artifactId>lambda-property-get-all</artifactId>
 	<version>1.0.0</version>
-	<name>property-get-all</name>
+	<name>lambda-property-get-all</name>
 
 	<properties>
 		<java.version>17</java.version>
