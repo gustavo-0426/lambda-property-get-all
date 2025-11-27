@@ -2,19 +2,22 @@
 
 # 🚀 lambda-property-get-all
 
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.java.net/projects/jdk/17/)
+[![AWS Lambda](https://img.shields.io/badge/AWS-Lambda-orange.svg)](https://aws.amazon.com/lambda/)
+[![Maven](https://img.shields.io/badge/Maven-3.8+-blue.svg)](https://maven.apache.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Aplicación** para proyecto Spring Boot con conexión a base de datos MySQL. Estructura mínima lista para desarrollar tu aplicación.
+**AWS Lambda Function** para obtener todas las propiedades desde una base de datos MySQL. Función serverless lista para desplegar en AWS Lambda con API Gateway.
 
 ## 📋 Tabla de Contenidos
 
 - [🚀 Características](#características)
 - [📋 Requisitos Previos](#requisitos-previos)
-- [⚡ Inicio Rápido (5 minutos)](#inicio-rapido)
-- [📚 API Documentation](#api-documentation)
+- [⚡ Inicio Rápido](#inicio-rapido)
+- [🏗️ Arquitectura](#arquitectura)
+- [🔧 Configuración](#configuracion)
+- [📦 Despliegue](#despliegue)
+- [📚 API Endpoint](#api-endpoint)
 - [📞 Contacto](#contacto)
 
 ---
@@ -22,70 +25,168 @@
 
 ## <a id="características"></a>🚀 Características
 
-- ✅ **Aplicación** Spring Boot ${SCRIPT_SPRING_BOOT_VERSION} + Java 17
-- 💾 **Soporte base de datos** MySQL
-- 🐳 **Docker Compose** configurado para orquestación de servicios
-- 🔧 **Variables de entorno** para configuración sensible y mantenible
-- 📦 **Dockerfile** optimizado con multi-stage build
+- ✅ **AWS Lambda Function** con Java 17
+- 🔌 **API Gateway Integration** para endpoints REST
+- 💾 **Conexión MySQL** para gestión de propiedades
+- 📦 **Maven Shade Plugin** para crear JAR deployable
+- 🎯 **Lombok** para reducir código boilerplate
+- 🔒 **Variables de entorno** para configuración segura
+- ⚡ **RequestHandler** optimizado para respuestas rápidas
 
 ---
 <br>
 
 ## <a id="requisitos-previos"></a>📋 Requisitos Previos
 
-- **Spring Boot ${SCRIPT_SPRING_BOOT_VERSION}**
 - **Java 17**
 - **Maven 3.8+**
-- **Docker** y **Docker Compose**
-- **Git**
+- **AWS CLI** configurado
+- **Cuenta AWS** con permisos para Lambda, API Gateway y RDS
+- **Base de datos MySQL** (RDS o accesible desde Lambda)
 
 ---
 <br>
 
-## <a id="inicio-rapido"></a>⚡ Inicio Rápido (5 minutos)
+## <a id="inicio-rapido"></a>⚡ Inicio Rápido
 
-### 1️⃣ Variables de Entorno
+### 1️⃣ Compilar el Proyecto
 
-Crear y configurar el archivo de variables de entorno:
 ```bash
-cp docker-compose/env.example docker-compose/.env
+mvn clean package
 ```
 
-### 2️⃣ Ejecutar Aplicación con Docker Compose
+Este comando genera un JAR en `target/lambda-property-get-all-1.0.0.jar` listo para desplegar.
 
-#### Construir y ejecutar:
+### 2️⃣ Estructura de la Base de Datos
 
-```bash
-docker-compose -f docker-compose/compose.yml up -d
-```
+Ejecuta el script SQL para crear la tabla de propiedades:
 
-#### Verificar contenedores activos:
-```bash
-docker-compose -f docker-compose/compose.yml ps
-```
-
-#### Ver logs en tiempo real:
-```bash
-docker-compose -f docker-compose/compose.yml logs -f
+```sql
+CREATE TABLE property (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    owner_id BIGINT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    property_type VARCHAR(100),
+    price DOUBLE NOT NULL,
+    available BOOLEAN DEFAULT TRUE
+);
 ```
 
 ---
 <br>
 
-## <a id="api-documentation"></a>📚 API Documentation
+## <a id="arquitectura"></a>🏗️ Arquitectura
 
-### 📖 Swagger UI
+### Componentes Principales
 
-Una vez que la aplicación esté ejecutándose, puedes acceder a la documentación interactiva:
+- **PropertyGetAllHandler**: Handler principal que procesa requests de API Gateway
+- **Property**: Modelo de datos para propiedades inmobiliarias
+- **DatabaseUtil**: Utilidad para conexión a MySQL usando variables de entorno
 
-- **Swagger UI:** [http://localhost:9999/v1/template/swagger-ui/index.html](http://localhost:9999/v1/template/swagger-ui/index.html)
-- **OpenAPI JSON:** [http://localhost:9999/v3/api-docs](http://localhost:9999/v3/api-docs)
+### Flujo de Ejecución
 
-### 🗄️ Administración de Base de Datos
+1. API Gateway recibe request HTTP GET
+2. Lambda invoca `PropertyGetAllHandler.handleRequest()`
+3. Se establece conexión a MySQL usando variables de entorno
+4. Se ejecuta query `SELECT * FROM property`
+5. Resultados se serializan a JSON con Gson
+6. API Gateway retorna respuesta al cliente
 
-Para gestionar y administrar la base de datos MySQL, se debe conectar al servidor:
+---
+<br>
 
-- [http://localhost:MySQL_ADMIN_PORT](http://localhost:MySQL_ADMIN_PORT)
+## <a id="configuracion"></a>🔧 Configuración
+
+### Variables de Entorno en AWS Lambda
+
+Configurar las siguientes variables de entorno en la consola de Lambda:
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `DB_URL` | URL de conexión MySQL | `mydb.123456.us-east-1.rds.amazonaws.com:3306/properties_db` |
+| `DB_USER` | Usuario de base de datos | `admin` |
+| `DB_PASSWORD` | Contraseña de base de datos | `your-secure-password` |
+
+---
+<br>
+
+## <a id="despliegue"></a>📦 Despliegue
+
+### Opción 1: AWS Console
+
+1. Compilar el proyecto: `mvn clean package`
+2. Ir a AWS Lambda Console
+3. Crear nueva función con Java 17 runtime
+4. Subir `target/lambda-property-get-all-1.0.0.jar`
+5. Configurar handler: `com.softworld.handler.PropertyGetAllHandler`
+6. Agregar variables de entorno
+7. Configurar API Gateway trigger
+
+### Opción 2: AWS CLI
+
+```bash
+# Crear función Lambda
+aws lambda create-function \
+  --function-name property-get-all \
+  --runtime java17 \
+  --handler com.softworld.handler.PropertyGetAllHandler \
+  --zip-file fileb://target/lambda-property-get-all-1.0.0.jar \
+  --role arn:aws:iam::YOUR_ACCOUNT:role/lambda-execution-role \
+  --environment Variables="{DB_URL=your-db-url,DB_USER=your-user,DB_PASSWORD=your-password}"
+
+# Actualizar función existente
+aws lambda update-function-code \
+  --function-name property-get-all \
+  --zip-file fileb://target/lambda-property-get-all-1.0.0.jar
+```
+
+---
+<br>
+
+## <a id="api-endpoint"></a>📚 API Endpoint
+
+### GET /properties
+
+Obtiene todas las propiedades disponibles en la base de datos.
+
+**Request:**
+```http
+GET /properties HTTP/1.1
+Host: your-api-gateway-url.amazonaws.com
+```
+
+**Response Success (200):**
+```json
+[
+  {
+    "id": 1,
+    "ownerId": 101,
+    "name": "Casa en la playa",
+    "description": "Hermosa casa frente al mar",
+    "propertyType": "Casa",
+    "price": 250000.00,
+    "available": true
+  },
+  {
+    "id": 2,
+    "ownerId": 102,
+    "name": "Apartamento céntrico",
+    "description": "Moderno apartamento en el centro",
+    "propertyType": "Apartamento",
+    "price": 150000.00,
+    "available": true
+  }
+]
+```
+
+**Response Error (500):**
+```json
+{
+  "error": "Internal Server Error",
+  "message": "Failed connection to database: ..."
+}
+```
 
 ---
 <br>
