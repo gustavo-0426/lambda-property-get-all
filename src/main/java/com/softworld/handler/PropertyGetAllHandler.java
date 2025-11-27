@@ -7,10 +7,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.google.gson.Gson;
 import com.softworld.model.Property;
 import com.softworld.util.DatabaseUtil;
+import com.softworld.util.PropertyMapper;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,23 +39,14 @@ public class PropertyGetAllHandler implements RequestHandler<APIGatewayProxyRequ
 
         List<Property> propertyList = new ArrayList<>();
 
+        String query = "SELECT id, owner_id, name, description, property_type, price, available FROM property";
+        
         try (Connection connection = DatabaseUtil.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT * FROM property")) {
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
 
             while (resultSet.next()) {
-
-                Property property = new Property();
-
-                property.setId(resultSet.getLong("id"));
-                property.setOwnerId(resultSet.getLong("owner_id"));
-                property.setName(resultSet.getString("name"));
-                property.setDescription(resultSet.getString("description"));
-                property.setPropertyType(resultSet.getString("property_type"));
-                property.setPrice(resultSet.getDouble("price"));
-                property.setAvailable(resultSet.getBoolean("available"));
-
-                propertyList.add(property);
+                propertyList.add(PropertyMapper.mapFromResultSet(resultSet));
             }
 
             return new APIGatewayProxyResponseEvent()
