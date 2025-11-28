@@ -1,27 +1,31 @@
-package com.softworld.handler;
+package com.softworld.infrastructure.adapter.in.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
-import com.softworld.model.Property;
-import com.softworld.util.DatabaseUtil;
-import com.softworld.util.PropertyMapper;
+import com.softworld.application.usecase.GetAllPropertiesUseCaseImpl;
+import com.softworld.domain.model.Property;
+import com.softworld.domain.port.in.GetAllPropertiesUseCase;
+import com.softworld.infrastructure.adapter.out.persistence.MySqlPropertyRepository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PropertyGetAllHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class PropertyGetAllLambdaAdapter implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Gson gson = new Gson();
     private static final String EXPECTED_PATH = "/properties";
     private static final String EXPECTED_METHOD = "GET";
+
+    private final GetAllPropertiesUseCase getAllPropertiesUseCase;
+
+    public PropertyGetAllLambdaAdapter() {
+        MySqlPropertyRepository repository = new MySqlPropertyRepository();
+        this.getAllPropertiesUseCase = new GetAllPropertiesUseCaseImpl(repository);
+    }
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
@@ -37,28 +41,18 @@ public class PropertyGetAllHandler implements RequestHandler<APIGatewayProxyRequ
                 "Path not found: " + path);
         }
 
-        List<Property> propertyList = new ArrayList<>();
-
-        String query = "SELECT id, owner_id, name, description, property_type, price, available FROM property";
-        
-        try (Connection connection = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
-
-            while (resultSet.next()) {
-                propertyList.add(PropertyMapper.mapFromResultSet(resultSet));
-            }
+        try {
+            List<Property> properties = getAllPropertiesUseCase.execute();
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(Map.of("Content-Type", "application/json"))
-                    .withBody(gson.toJson(propertyList));
+                    .withBody(gson.toJson(properties));
 
         } catch (Exception e) {
-            context.getLogger().log("Failed connection to database: " + e.getMessage());
+            context.getLogger().log("Error executing use case: " + e.getMessage());
             return buildErrorResponse(500, "Internal Server Error", e.getMessage());
         }
-
     }
 
     private APIGatewayProxyResponseEvent buildErrorResponse(int statusCode, String error, String message) {

@@ -1,4 +1,4 @@
-package com.softworld.util;
+package com.softworld.infrastructure.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -6,7 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class DatabaseUtil {
+public class DatabaseConfig {
 
     private static final HikariDataSource dataSource;
 
