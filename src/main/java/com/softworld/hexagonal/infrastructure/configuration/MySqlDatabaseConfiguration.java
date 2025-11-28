@@ -1,4 +1,4 @@
-package com.softworld.infrastructure.config;
+package com.softworld.hexagonal.infrastructure.configuration;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -6,7 +6,11 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class DatabaseConfig {
+/**
+ * CONFIGURATION
+ * Configuración de infraestructura para MySQL con HikariCP.
+ */
+public class MySqlDatabaseConfiguration {
 
     private static final HikariDataSource dataSource;
 

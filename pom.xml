@@ -79,7 +79,7 @@
 						<configuration>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.softworld.infrastructure.adapter.in.lambda.PropertyGetAllLambdaAdapter</mainClass>
+									<mainClass>com.softworld.hexagonal.infrastructure.adapter.input.lambda.PropertyLambdaInputAdapter</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

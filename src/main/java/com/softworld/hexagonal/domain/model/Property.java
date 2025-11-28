@@ -1,4 +1,4 @@
-package com.softworld.domain.model;
+package com.softworld.hexagonal.domain.model;
 
 public class Property {
 

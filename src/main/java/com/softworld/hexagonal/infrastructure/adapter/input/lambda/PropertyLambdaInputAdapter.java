@@ -1,30 +1,37 @@
-package com.softworld.infrastructure.adapter.in.lambda;
+package com.softworld.hexagonal.infrastructure.adapter.input.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
-import com.softworld.application.usecase.GetAllPropertiesUseCaseImpl;
-import com.softworld.domain.model.Property;
-import com.softworld.domain.port.in.GetAllPropertiesUseCase;
-import com.softworld.infrastructure.adapter.out.persistence.MySqlPropertyRepository;
+import com.softworld.hexagonal.application.service.GetAllPropertiesService;
+import com.softworld.hexagonal.domain.model.Property;
+import com.softworld.hexagonal.domain.port.input.GetAllPropertiesInputPort;
+import com.softworld.hexagonal.infrastructure.adapter.output.persistence.mysql.MySqlPropertyRepositoryAdapter;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PropertyGetAllLambdaAdapter implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+/**
+ * INPUT ADAPTER (Adaptador de Entrada Primario)
+ * Punto de entrada a la aplicación desde AWS Lambda.
+ * - Recibe eventos externos (API Gateway)
+ * - Invoca el puerto de ENTRADA (use case)
+ * - Convierte respuesta del dominio a formato externo (JSON)
+ */
+public class PropertyLambdaInputAdapter implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Gson gson = new Gson();
     private static final String EXPECTED_PATH = "/properties";
     private static final String EXPECTED_METHOD = "GET";
 
-    private final GetAllPropertiesUseCase getAllPropertiesUseCase;
+    private final GetAllPropertiesInputPort getAllPropertiesInputPort;
 
-    public PropertyGetAllLambdaAdapter() {
-        MySqlPropertyRepository repository = new MySqlPropertyRepository();
-        this.getAllPropertiesUseCase = new GetAllPropertiesUseCaseImpl(repository);
+    public PropertyLambdaInputAdapter() {
+        MySqlPropertyRepositoryAdapter repositoryAdapter = new MySqlPropertyRepositoryAdapter();
+        this.getAllPropertiesInputPort = new GetAllPropertiesService(repositoryAdapter);
     }
 
     @Override
@@ -42,7 +49,7 @@ public class PropertyGetAllLambdaAdapter implements RequestHandler<APIGatewayPro
         }
 
         try {
-            List<Property> properties = getAllPropertiesUseCase.execute();
+            List<Property> properties = getAllPropertiesInputPort.getAllProperties();
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
