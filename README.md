@@ -44,8 +44,6 @@
 - **AWS CLI** configurado
 - **Cuenta AWS** con permisos para Lambda, API Gateway y DynamoDB
 - **Tabla DynamoDB** `properties` creada en AWS
-- **Cuenta AWS** con permisos para Lambda, API Gateway y RDS
-- **Base de datos MySQL** (RDS o accesible desde Lambda)
 
 ---
 <br>
@@ -79,6 +77,26 @@ aws dynamodb create-table \
   --billing-mode PAY_PER_REQUEST \
   --region us-east-1
 ```
+
+### 3️⃣ Insertar Datos de Prueba
+
+```bash
+aws dynamodb put-item \
+  --table-name properties \
+  --item '{
+    "id": {"N": "1"},
+    "ownerId": {"N": "100"},
+    "name": {"S": "Casa en la playa"},
+    "description": {"S": "Hermosa casa frente al mar"},
+    "propertyType": {"S": "HOUSE"},
+    "price": {"N": "350000"},
+    "available": {"BOOL": true}
+  }'
+```
+
+---
+<br>
+
 ## <a id="arquitectura"></a>🏗️ Arquitectura Hexagonal
 
 ### Estructura del Proyecto
@@ -121,6 +139,21 @@ hexagonal/
 4. El servicio usa **PropertyRepositoryOutputPort** (abstracción)
 5. **DynamoDBPropertyRepositoryAdapter** (Output Adapter) ejecuta Scan en DynamoDB
 6. **PropertyDynamoDBMapper** convierte AttributeValue → Property (dominio)
+7. Respuesta se serializa a JSON con Gson
+8. API Gateway retorna respuesta al cliente
+
+### Principios Aplicados
+
+- ✅ **Separation of Concerns**: Cada capa tiene responsabilidad única
+- ✅ **Dependency Inversion**: Dominio no depende de infraestructura
+- ✅ **Testability**: Puertos permiten mock de dependencias
+- ✅ **Flexibility**: Fácil cambiar DynamoDB por otra base de datos
+
+---
+<br>
+
+## <a id="configuracion"></a>🔧 Configuración
+
 ### Variables de Entorno en AWS Lambda
 
 Configurar las siguientes variables de entorno en la consola de Lambda:
@@ -135,7 +168,8 @@ Configurar las siguientes variables de entorno en la consola de Lambda:
 ---
 <br>
 
-## <a id="arquitectura"></a>🏗️ Arquitectura
+## <a id="despliegue"></a>📦 Despliegue
+
 ### Opción 1: AWS Console
 
 1. **Compilar el proyecto:** `mvn clean package`
@@ -149,38 +183,7 @@ Configurar las siguientes variables de entorno en la consola de Lambda:
    - `DYNAMODB_TABLE_NAME`: `properties`
 8. Agregar política IAM: **AmazonDynamoDBReadOnlyAccess**
 9. Configurar **API Gateway trigger**
-1. API Gateway recibe request HTTP GET
-2. Lambda invoca `PropertyGetAllHandler.handleRequest()`
-3. Se establece conexión a MySQL usando variables de entorno
-4. Se ejecuta query `SELECT * FROM property`
-5. Resultados se serializan a JSON con Gson
-6. API Gateway retorna respuesta al cliente
 
----
-<br>
-
-## <a id="configuracion"></a>🔧 Configuración
-
-### Variables de Entorno en AWS Lambda
-
-Configurar las siguientes variables de entorno en la consola de Lambda:
-
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `DB_URL` | URL de conexión MySQL | `mydb.123456.us-east-1.rds.amazonaws.com:3306/properties_db` |
-| `DB_USER` | Usuario de base de datos | `admin` |
-| `DB_PASSWORD` | Contraseña de base de datos | `your-secure-password` |
-
----
-<br>
-
-## <a id="despliegue"></a>📦 Despliegue
-
-### Opción 1: AWS Console
-
-1. Compilar el proyecto: `mvn clean package`
-2. Ir a AWS Lambda Console
-3. Crear nueva función con Java 17 runtime
 ### Opción 2: AWS CLI
 
 ```bash
@@ -200,11 +203,6 @@ aws iam attach-role-policy \
   --role-name lambda-execution-role \
   --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
 
-# Actualizar función existente
-aws lambda update-function-code \
-  --function-name property-get-all \
-  --zip-file fileb://target/lambda-property-get-all-1.0.0.jar
-```
 # Actualizar función existente
 aws lambda update-function-code \
   --function-name property-get-all \
@@ -265,17 +263,6 @@ Host: your-api-gateway-url.amazonaws.com
 
 ```bash
 curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/properties
-``` "available": true
-  }
-]
-```
-
-**Response Error (500):**
-```json
-{
-  "error": "Internal Server Error",
-  "message": "Failed connection to database: ..."
-}
 ```
 
 ---
