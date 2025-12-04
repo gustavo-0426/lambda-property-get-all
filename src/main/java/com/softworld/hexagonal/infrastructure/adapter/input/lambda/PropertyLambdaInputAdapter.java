@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.softworld.hexagonal.application.service.GetAllPropertiesService;
 import com.softworld.hexagonal.domain.model.Property;
 import com.softworld.hexagonal.domain.port.input.GetAllPropertiesInputPort;
-import com.softworld.hexagonal.infrastructure.adapter.output.persistence.mysql.MySqlPropertyRepositoryAdapter;
+import com.softworld.hexagonal.infrastructure.adapter.output.persistence.dynamodb.DynamoDBPropertyRepositoryAdapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +30,7 @@ public class PropertyLambdaInputAdapter implements RequestHandler<APIGatewayProx
     private final GetAllPropertiesInputPort getAllPropertiesInputPort;
 
     public PropertyLambdaInputAdapter() {
-        MySqlPropertyRepositoryAdapter repositoryAdapter = new MySqlPropertyRepositoryAdapter();
+        DynamoDBPropertyRepositoryAdapter repositoryAdapter = new DynamoDBPropertyRepositoryAdapter();
         this.getAllPropertiesInputPort = new GetAllPropertiesService(repositoryAdapter);
     }
 

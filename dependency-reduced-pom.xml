@@ -34,7 +34,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.softworld.handler.PropertyGetAllHandler</mainClass>
+                  <mainClass>com.softworld.hexagonal.infrastructure.adapter.input.lambda.PropertyLambdaInputAdapter</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -48,24 +48,27 @@
         <configuration>
           <mainClass>com.softworld.LocalTest</mainClass>
           <environmentVariables>
-            <DB_URL>${env.DB_URL}</DB_URL>
-            <DB_USER>${env.DB_USER}</DB_USER>
-            <DB_PASSWORD>${env.DB_PASSWORD}</DB_PASSWORD>
+            <AWS_REGION>us-east-1</AWS_REGION>
+            <DYNAMODB_TABLE_NAME>properties</DYNAMODB_TABLE_NAME>
           </environmentVariables>
         </configuration>
       </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>1.18.38</version>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws.sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <properties>
     <lombok.version>1.18.38</lombok.version>
     <java.version>17</java.version>
+    <aws.sdk.version>2.29.26</aws.sdk.version>
   </properties>
 </project>

@@ -10,10 +10,24 @@
 
 	<properties>
 		<java.version>17</java.version>
+		<aws.sdk.version>2.29.26</aws.sdk.version>
 		<lombok.version>1.18.38</lombok.version>
 	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws.sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
+		<!-- AWS Lambda -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-lambda-java-events</artifactId>
@@ -24,27 +38,26 @@
 			<artifactId>aws-lambda-java-core</artifactId>
 			<version>1.2.3</version>
 		</dependency>
+
+		<!-- AWS SDK v2 - DynamoDB -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb-enhanced</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>url-connection-client</artifactId>
+		</dependency>
+
+		<!-- JSON -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.11.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
-			<version>9.2.0</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.zaxxer</groupId>
-			<artifactId>HikariCP</artifactId>
-			<version>5.1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
@@ -93,9 +106,8 @@
 				<configuration>
 					<mainClass>com.softworld.LocalTest</mainClass>
 					<environmentVariables>
-						<DB_URL>${env.DB_URL}</DB_URL>
-						<DB_USER>${env.DB_USER}</DB_USER>
-						<DB_PASSWORD>${env.DB_PASSWORD}</DB_PASSWORD>
+						<AWS_REGION>us-east-1</AWS_REGION>
+						<DYNAMODB_TABLE_NAME>properties</DYNAMODB_TABLE_NAME>
 					</environmentVariables>
 				</configuration>
 			</plugin>
