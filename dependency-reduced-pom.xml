@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.softworld.cloud</groupId>
-  <artifactId>property-get-all</artifactId>
-  <name>property-get-all</name>
+  <artifactId>lambda-property-get-all</artifactId>
+  <name>lambda-property-get-all</name>
   <version>1.0.0</version>
   <build>
     <plugins>
@@ -34,25 +34,41 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.softworld.handler.PropertyGetAllHandler</mainClass>
+                  <mainClass>com.softworld.hexagonal.infrastructure.adapter.input.lambda.PropertyLambdaInputAdapter</mainClass>
                 </transformer>
               </transformers>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>com.softworld.LocalTest</mainClass>
+          <environmentVariables>
+            <AWS_REGION>us-east-1</AWS_REGION>
+            <DYNAMODB_TABLE_NAME>properties</DYNAMODB_TABLE_NAME>
+          </environmentVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>1.18.38</version>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws.sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <properties>
     <lombok.version>1.18.38</lombok.version>
     <java.version>17</java.version>
+    <aws.sdk.version>2.29.26</aws.sdk.version>
   </properties>
 </project>
